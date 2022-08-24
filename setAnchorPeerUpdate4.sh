@@ -20,21 +20,21 @@ infoln "Fetching channel config for channel $CHANNEL_NAME"
 export PATH=${HOME}/fabric-samples/bin:$PATH
 export FABRIC_CFG_PATH=${PWD}/config
 
-CHANNEL_NAME="mychannel"
+CHANNEL_NAME="mychannel4"
 
 export ORDERER_CA=${PWD}/organizations/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
 export CORE_PEER_TLS_ENABLED=true
 
 #########################################################
-######## set anchor peer for Org1 in the channel ########
+######## set anchor peer for Org4 in the channel ########
 #########################################################
 
 # Fetching the most recent configuration block for the channel
 infoln "Fetching the most recent configuration block for the channel"
-export CORE_PEER_LOCALMSPID="Org1MSP"
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
-export CORE_PEER_ADDRESS=localhost:1004
+export CORE_PEER_LOCALMSPID="Org4MSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp
+export CORE_PEER_ADDRESS=localhost:5004
 
 pushd channel-artifacts
 set -x
@@ -53,7 +53,7 @@ jq '.data.data[0].payload.data.config' config_block.json > config.json
 set -x
 infoln "Modify the configuration to append the anchor peer"
 Modify the configuration to append the anchor peer 
-jq '.channel_group.groups.Application.groups.Org1MSP.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "peer0.org1.example.com","port": 1004}]},"version": "0"}}' config.json > modified_config.json
+jq '.channel_group.groups.Application.groups.Org4MSP.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "peer0.org4.example.com","port": 5004}]},"version": "0"}}' config.json > modified_config.json
 { set +x; } 2>/dev/null
 
 
@@ -68,28 +68,25 @@ configtxlator compute_update --channel_id "${CHANNEL_NAME}" --original config.pb
 
 configtxlator proto_decode --input config_update.pb --type common.ConfigUpdate --output config_update.json
 echo '{"payload":{"header":{"channel_header":{"channel_id":"'$CHANNEL_NAME'", "type":2}},"data":{"config_update":'$(cat config_update.json)'}}}' | jq . > config_update_in_envelope.json
-configtxlator proto_encode --input config_update_in_envelope.json --type common.Envelope --output Org1MSPAnchor.tx
+configtxlator proto_encode --input config_update_in_envelope.json --type common.Envelope --output Org4MSPAnchor.tx
 { set +x; } 2>/dev/null
 
 
-# Anchor peer set for org1 on channel
-infoln "Anchor peer set for org1 on channel"
-peer channel update -f Org1MSPAnchor.tx -c "${CHANNEL_NAME}" -o localhost:1003  --ordererTLSHostnameOverride orderer.example.com --tls --cafile "$ORDERER_CA"
+# Anchor peer set for org4 on channel
+infoln "Anchor peer set for org4 on channel"
+peer channel update -f Org4MSPAnchor.tx -c "${CHANNEL_NAME}" -o localhost:1003  --ordererTLSHostnameOverride orderer.example.com --tls --cafile "$ORDERER_CA"
 popd
 
-
-
-
 #########################################################
-######## set anchor peer for Org2 in the channel ########
+######## set anchor peer for Org5 in the channel ########
 #########################################################
 
 # Fetching the most recent configuration block for the channel
 infoln "Fetching the most recent configuration block for the channel"
-export CORE_PEER_LOCALMSPID="Org2MSP"
-export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt
-export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp
-export CORE_PEER_ADDRESS=localhost:2004
+export CORE_PEER_LOCALMSPID="Org5MSP"
+export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org5.example.com/peers/peer0.org5.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org5.example.com/users/Admin@org5.example.com/msp
+export CORE_PEER_ADDRESS=localhost:7004
 
 pushd channel-artifacts
 set -x
@@ -108,7 +105,7 @@ jq '.data.data[0].payload.data.config' config_block.json > config.json
 set -x
 infoln "Modify the configuration to append the anchor peer"
 Modify the configuration to append the anchor peer 
-jq '.channel_group.groups.Application.groups.Org2MSP.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "peer0.org2.example.com","port": 2004}]},"version": "0"}}' config.json > modified_config.json
+jq '.channel_group.groups.Application.groups.Org5MSP.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "peer0.org5.example.com","port": 7004}]},"version": "0"}}' config.json > modified_config.json
 { set +x; } 2>/dev/null
 
 
@@ -123,11 +120,11 @@ configtxlator compute_update --channel_id "${CHANNEL_NAME}" --original config.pb
 
 configtxlator proto_decode --input config_update.pb --type common.ConfigUpdate --output config_update.json
 echo '{"payload":{"header":{"channel_header":{"channel_id":"'$CHANNEL_NAME'", "type":2}},"data":{"config_update":'$(cat config_update.json)'}}}' | jq . > config_update_in_envelope.json
-configtxlator proto_encode --input config_update_in_envelope.json --type common.Envelope --output Org2MSPAnchor.tx
+configtxlator proto_encode --input config_update_in_envelope.json --type common.Envelope --output Org5MSPAnchor.tx
 { set +x; } 2>/dev/null
 
 
-# Anchor peer set for org2 on channel
-infoln "Anchor peer set for org2 on channel"
-peer channel update -f Org2MSPAnchor.tx -c "${CHANNEL_NAME}" -o localhost:1003  --ordererTLSHostnameOverride orderer.example.com --tls --cafile "$ORDERER_CA"
+# Anchor peer set for org5 on channel
+infoln "Anchor peer set for org5 on channel"
+peer channel update -f Org5MSPAnchor.tx -c "${CHANNEL_NAME}" -o localhost:1003  --ordererTLSHostnameOverride orderer.example.com --tls --cafile "$ORDERER_CA"
 popd

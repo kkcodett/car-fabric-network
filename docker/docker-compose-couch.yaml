@@ -20,7 +20,7 @@ services:
     # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
     # for example map it to utilize Fauxton User Interface in dev environments.
     ports:
-      - "11004:11004"
+      - "11004:5984"
     networks:
       - test
 
@@ -35,7 +35,7 @@ services:
     # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
     # for example map it to utilize Fauxton User Interface in dev environments.
     ports:
-      - "11014:11004"
+      - "11014:5984"
     networks:
       - test
 
@@ -51,7 +51,7 @@ services:
     # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
     # for example map it to utilize Fauxton User Interface in dev environments.
     ports:
-      - "11024:11004"
+      - "11024:5984"
     networks:
       - test
 
@@ -67,7 +67,7 @@ services:
     # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
     # for example map it to utilize Fauxton User Interface in dev environments.
     ports:
-      - "11034:11004"
+      - "11034:5984"
     networks:
       - test
 
@@ -83,6 +83,6 @@ services:
     # Comment/Uncomment the port mapping if you want to hide/expose the CouchDB service,
     # for example map it to utilize Fauxton User Interface in dev environments.
     ports:
-      - "11044:11004"
+      - "11044:5984"
     networks:
       - test
