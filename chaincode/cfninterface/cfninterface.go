@@ -136,8 +136,8 @@ func (s *SmartContract) RegisterCar(ctx contractapi.TransactionContextInterface,
 		CID:             cid,
 		Company:         company,
 		Model:           model,
-		CDay:          	cday,
-		FValue: 		fvalue,
+		CDay:          	 cday,
+		FValue: 		 fvalue,
 	}
 	assetJSON, err := json.Marshal(car)
 	if err != nil {
@@ -196,7 +196,7 @@ func (s *SmartContract) OwnerRegister(ctx contractapi.TransactionContextInterfac
 
 	//면허 등록
 	register := Register{
-		Owner:             owner,
+		Owner:              owner,
 		Address:			address,
 		ID:					id,
 		RDay:				rday,
@@ -229,12 +229,12 @@ func (s *SmartContract) NewOwner(ctx contractapi.TransactionContextInterface, ci
 	}
 
 	car := Car{
-		CID:             cid,
+		CID:            cid,
 		Owner:          owner,
 		Address:        address,
-		ID:          id,
-		RDay: 		rday,
-		CRDay: 		crday,
+		ID:          	id,
+		RDay: 			rday,
+		CRDay: 			crday,
 	}
 
 	assetJSON, err := json.Marshal(car)
@@ -261,7 +261,7 @@ func (s *SmartContract) OwnerRead(ctx contractapi.TransactionContextInterface, i
 		return nil, err
 	}
 
-	return &car, nil
+	return &register, nil
 }
 
 //차주 갱신
@@ -282,7 +282,7 @@ func (s *SmartContract) UpdateNewOwner(ctx contractapi.TransactionContextInterfa
 }
 
 //차 수리 등록
-func (s *SmartContract) RepairRegister(ctx contractapi.TransactionContextInterface, rid string, cid string, part string, message string) error {
+func (s *SmartContract) RepairRegister(ctx contractapi.TransactionContextInterface, rid string, cid string, part string, price int, message string) error {
 	exists, err := s.ExistsCar(ctx, cid)
 	if err != nil {
 		return err
@@ -293,11 +293,11 @@ func (s *SmartContract) RepairRegister(ctx contractapi.TransactionContextInterfa
 
 	// overwriting original asset with new asset
 	repair := Repair{
-		RID:             rid,
-		CID:			cid,
-		Part:					part,
+		RID:             	rid,
+		CID:				cid,
+		Part:				part,
 		Price:				price,
-		Message:		message,
+		Message:			message,
 	}
 	assetJSON, err := json.Marshal(repair)
 	if err != nil {
@@ -322,10 +322,10 @@ func (s *SmartContract) InsuranceRegister(ctx contractapi.TransactionContextInte
 	insurance := Insurance{
 		IName:					iname,
 		ICompany:				icompany,
-		IID:             iid,
-		AID:			aid,
-		IDay:		iday,
-		IPrice:     iprice,
+		IID:             		iid,
+		AID:					aid,
+		IDay:					iday,
+		IPrice:    				iprice,
 	}
 
 	assetJSON, err := json.Marshal(insurance)
@@ -347,12 +347,12 @@ func (s *SmartContract) PartCar(ctx contractapi.TransactionContextInterface, rid
 	}
 
 	var repair Repair
-	err = json.Unmarshal(assetJSON, &part)
+	err = json.Unmarshal(assetJSON, &repair)
 	if err != nil {
 		return nil, err
 	}
 
-	return &part, nil
+	return &repair.part, nil
 }
 
 //자동차 수리점 메모 조회
@@ -366,16 +366,16 @@ func (s *SmartContract) GetCar(ctx contractapi.TransactionContextInterface, rid 
 	}
 
 	var repair Repair
-	err = json.Unmarshal(assetJSON, &message)
+	err = json.Unmarshal(assetJSON, &repair)
 	if err != nil {
 		return nil, err
 	}
 
-	return &message, nil
+	return &repair.message, nil
 }
 
-//자동차 수리비용 업로드(보험사)
-func (s *SmartContract) PriceCar(ctx contractapi.TransactionContextInterface, iname string, icompany string, iid string, iprice int) error {
+//보험료 업로드(보험사)
+func (s *SmartContract) InsuranceCar(ctx contractapi.TransactionContextInterface, iname string, icompany string, iid string, iprice int) error {
 
 	exists, err := s.ExistsInsurance(ctx, iname, icompany)
 	if err != nil {
@@ -386,10 +386,10 @@ func (s *SmartContract) PriceCar(ctx contractapi.TransactionContextInterface, in
 	}
 
 	insurance := Insurance{
-		IName:             iname,
-		ICompany:		icompany,
-		IID:			iid,
-		IPrice:			iprice,
+		IName:             	iname,
+		ICompany:			icompany,
+		IID:				iid,
+		IPrice:				iprice,
 	}
 	assetJSON, err := json.Marshal(insurance)
 	if err != nil {
@@ -410,38 +410,26 @@ func (s *SmartContract) OkCar(ctx contractapi.TransactionContextInterface, iid s
 	}
 
 	var insurance Insurance
-	err = json.Unmarshal(assetJSON, &iprice)
+	err = json.Unmarshal(assetJSON, &insurance)
 	if err != nil {
 		return nil, err
 	}
 
-	return &iprice, nil
+	return &insurance.iprice, nil
 }
 
-//자동차 수리비용 업로드(딜러)
-func (s *SmartContract) PriceCar(ctx contractapi.TransactionContextInterface, rid string, price int) error {
+//수리 비용 완료 처리(딜러)
+func (s *SmartContract) PriceCar(ctx contractapi.TransactionContextInterface, rid string) error {
 
 	exists, err := s.ExistsRepair(ctx, rid)
 	if err != nil {
 		return err
 	}
-	if exists {
-		return fmt.Errorf("the repair %s already exists", rid)
+	if !exists {
+		return fmt.Errorf("the car %s does not exist", rid)
 	}
 
-	repair := Repair{
-		RID:             rid,
-		CID:			cid,
-		Part:					part,
-		Price:				price,
-		Message:		message,
-	}
-	assetJSON, err := json.Marshal(repair)
-	if err != nil {
-		return err
-	}
-
-	return ctx.GetStub().PutState(rid, assetJSON)
+	return ctx.GetStub().DelState(rid)
 }
 
 //자동차 폐차
@@ -469,10 +457,10 @@ func (s *SmartContract) ReportCar(ctx contractapi.TransactionContextInterface, a
 	}
 
 	accident := Accident{
-		AID:             aid,
+		AID:            aid,
 		APart:          apart,
-		Dod:           dod,
-		ADay:          aday,
+		Dod:            dod,
+		ADay:           aday,
 	}
 	assetJSON, err := json.Marshal(accident)
 	if err != nil {
@@ -494,7 +482,7 @@ func (s *SmartContract) NumberCar(ctx contractapi.TransactionContextInterface, c
 	}
 
 	car := Car{
-		CID:             cid,
+		CID:            cid,
 		Board:          board,
 	}
 	assetJSON, err := json.Marshal(car)
@@ -505,6 +493,7 @@ func (s *SmartContract) NumberCar(ctx contractapi.TransactionContextInterface, c
 	return ctx.GetStub().PutState(cid, assetJSON)
 }
 
+//메인 함수
 func main() {
 
 	chaincode, err := contractapi.NewChaincode(new(SmartContract))
