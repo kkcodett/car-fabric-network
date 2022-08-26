@@ -56,4 +56,8 @@ sleep 5
 
 ./deployCC5.sh
 
+sleep 5
+
+./application/ccp/ccp-generate.sh
+
 popd

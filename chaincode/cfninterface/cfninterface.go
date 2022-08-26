@@ -7,7 +7,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
 )
 
@@ -20,19 +19,19 @@ type Car struct {
 	Company string `json:"company"`			//만든 회사
 	Model string    `json:"model"`			//모델명
 	CDay  int `json:"cday"`					//출고일
-	FValue    int `json:"fvalue"`				//출고가
-	Board string `json:"board"`              //번호판 번호
+	FValue    int `json:"fvalue"`			//출고가
+	Board string `json:"board"`             //번호판 번호
 	Value int `json:"value"`    			//현재가
+	ID     string `json:"id"`				//등록자 주민등록번호
+	CRDay int `json:"crday"`       			//차 등록일
 }
 
 //제조사-공무원, 제조사-딜러 전용
 type Register struct {
 	Owner     string `json:"owner"`			//등록자 이름
 	Address string    `json:"address"`		//등록자 집주소
-	ID  int `json:"id"`						//등록자 주민등록번호
+	ID  string `json:"id"`					//등록자 주민등록번호
 	RDay   int `json:"rday"`				//등록일자
-	CID string `json:"cid"`       			//차 아이디
-	CRDay int `json:"crday"`       			//차 등록일
 }
 
 //공무원-보험사 전용
@@ -45,8 +44,6 @@ type Accident struct {
 
 //보험사-수리점 전용
 type Insurance struct {
-	IName string `json:"iname"`      	//보험 가입자 이름
-	ICompany string `json:"icompany"`	//보험회사명
 	IID string `json:"iid"`     		 //보험 처리 일련번호
 	AID string `json:"aid"`       		 //사건 아이디
 	IDay int `json:"iday"`				//보험처리일시
@@ -60,6 +57,59 @@ type Repair struct {
 	Part string `json:"part"`       //고장부위
 	Price int `json:"price"`		//수리비
 	Message string `json:"message"`	//수리자 메모
+}
+
+//테스트(인보크)
+func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
+	cars := []Car{
+		{CID: "HHDD", Company: "hyundai", Model: "porter", CDay: 200222, FValue: 300, Board: "32C22", Value: 300, ID:"0", CRDay:0},
+		{CID: "KKIIAA", Company: "kia", Model: "k5", CDay: 220222, FValue: 400, Board: "11C11", Value: 400, ID:"0", CRDay:0}, 
+		{CID: "BBMMWW", Company: "bmw", Model: "seires3", CDay: 210131, FValue: 500, Board: "33A55", Value: 500, ID:"0", CRDay:0},
+		{CID: "BBZZ", Company: "benz", Model: "s580", CDay: 210305, FValue: 600, Board: "75S65", Value: 600, ID:"0", CRDay:0},
+		{CID: "TTLL", Company: "tasla", Model: "t10", CDay: 220406, FValue: 700, Board: "58W65", Value: 700, ID:"0", CRDay:0},
+		{CID: "AADD", Company: "audi", Model: "a6", CDay: 200202, FValue: 800, Board: "55V99", Value: 800, ID:"0", CRDay:0},
+	}
+
+	for _, car := range cars {
+		assetJSON, err := json.Marshal(car)
+		if err != nil {
+			return err
+		}
+
+		err = ctx.GetStub().PutState(car.CID, assetJSON)
+		if err != nil {
+			return fmt.Errorf("failed to put to world state. %v", err)
+		}
+	}
+
+	return nil
+}
+
+//테스트2(쿼리)
+func (s *SmartContract) GetAllCar(ctx contractapi.TransactionContextInterface) ([]*Car, error) {
+
+	resultsIterator, err := ctx.GetStub().GetStateByRange("", "")
+	if err != nil {
+		return nil, err
+	}
+	defer resultsIterator.Close()
+
+	var cars []*Car
+	for resultsIterator.HasNext() {
+		queryResponse, err := resultsIterator.Next()
+		if err != nil {
+			return nil, err
+		}
+
+		var car Car
+		err = json.Unmarshal(queryResponse.Value, &car)
+		if err != nil {
+			return nil, err
+		}
+		cars = append(cars, &car)
+	}
+
+	return cars, nil
 }
 
 //차 존재여부
@@ -103,15 +153,8 @@ func (s *SmartContract) ExistsAccident(ctx contractapi.TransactionContextInterfa
 }
 
 //보험 존재여부
-func (s *SmartContract) ExistsInsurance(ctx contractapi.TransactionContextInterface, iname string, icompany string) (bool, error) {
-	assetJSON, err := ctx.GetStub().GetState(iname)
-	if err != nil {
-		return false, fmt.Errorf("failed to read from world state: %v", err)
-	}
-
-	return assetJSON != nil, nil
-
-	assetJSON, err := ctx.GetStub().GetState(icompany)
+func (s *SmartContract) ExistsInsurance(ctx contractapi.TransactionContextInterface, iid string) (bool, error) {
+	assetJSON, err := ctx.GetStub().GetState(iid)
 	if err != nil {
 		return false, fmt.Errorf("failed to read from world state: %v", err)
 	}
@@ -123,7 +166,7 @@ func (s *SmartContract) ExistsInsurance(ctx contractapi.TransactionContextInterf
 func (s *SmartContract) RegisterCar(ctx contractapi.TransactionContextInterface, cid string, company string, model string, cday int, fvalue int) error {
 
 	//차 존재하는지 알림
-	exists, err := s.ExistsCar(ctx, caddress)
+	exists, err := s.ExistsCar(ctx, cid)
 	if err != nil {
 		return err
 	}
@@ -138,6 +181,10 @@ func (s *SmartContract) RegisterCar(ctx contractapi.TransactionContextInterface,
 		Model:           model,
 		CDay:          	 cday,
 		FValue: 		 fvalue,
+		Board:			"0",
+		Value:			0,
+		ID:				"0",
+		CRDay:			0,
 	}
 	assetJSON, err := json.Marshal(car)
 	if err != nil {
@@ -167,7 +214,7 @@ func (s *SmartContract) InfoCar(ctx contractapi.TransactionContextInterface, cid
 }
 
 //자동차 거래가격 갱신
-func (s *SmartContract) AddCar(ctx contractapi.TransactionContextInterface, cid string, nvalue int) error {
+func (s *SmartContract) AddCar(ctx contractapi.TransactionContextInterface, cid string, value int) error {
 
 	car, err := s.InfoCar(ctx, cid)
 	if err != nil {
@@ -184,7 +231,7 @@ func (s *SmartContract) AddCar(ctx contractapi.TransactionContextInterface, cid 
 }
 
 //운전 면허 등록
-func (s *SmartContract) OwnerRegister(ctx contractapi.TransactionContextInterface, owner string, address string, id int, rday int) error {
+func (s *SmartContract) OwnerRegister(ctx contractapi.TransactionContextInterface, owner string, address string, id string, rday int) error {
 	exists, err := s.ExistsOwner(ctx, owner)
 	//등록확인
 	if err != nil {
@@ -210,39 +257,41 @@ func (s *SmartContract) OwnerRegister(ctx contractapi.TransactionContextInterfac
 }
 
 //새로운 차주 등록
-func (s *SmartContract) NewOwner(ctx contractapi.TransactionContextInterface, cid string, owner string, address string, id string, rday int, crday int) error {
+func (s *SmartContract) NewOwner(ctx contractapi.TransactionContextInterface, cid string, id string, crday int) error {
 
-	exists, err := s.ExistsCar(ctx, cid)
+	car, err := s.InfoCar(ctx, cid)
 	if err != nil {
 		return err
 	}
-	if exists {
-		return fmt.Errorf("the car %s already exists", cid)
-	}
 
-	exists, err := s.ExistsCar(ctx, owner)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return fmt.Errorf("the owner %s already exists", owner)
-	}
-
-	car := Car{
-		CID:            cid,
-		Owner:          owner,
-		Address:        address,
-		ID:          	id,
-		RDay: 			rday,
-		CRDay: 			crday,
-	}
-
+	car.ID = id
+	car.CRDay = crday
 	assetJSON, err := json.Marshal(car)
 	if err != nil {
 		return err
 	}
 
-	return ctx.GetStub().PutState(owner, assetJSON)
+	return ctx.GetStub().PutState(cid, assetJSON)
+	// exists, err := s.ExistsCar(ctx, cid)
+	// if err != nil {
+	// 	return err
+	// }
+	// if exists {
+	// 	return fmt.Errorf("the car %s already exists", cid)
+	// }
+
+	// car := Car{
+	// 	CID:            cid,
+	// 	ID:          	id,
+	// 	CRDay: 			crday,
+	// }
+
+	// assetJSON, err := json.Marshal(car)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return ctx.GetStub().PutState(cid, assetJSON)
 }
 
 //차주 신원 조회
@@ -265,15 +314,12 @@ func (s *SmartContract) OwnerRead(ctx contractapi.TransactionContextInterface, i
 }
 
 //차주 갱신
-func (s *SmartContract) UpdateNewOwner(ctx contractapi.TransactionContextInterface, id string, cid string, crday int) error {
-	asset, err := s.OwnerRead(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	register.CID = cid
-	register.CRDay = crday
-	assetJSON, err := json.Marshal(register)
+func (s *SmartContract) UpdateNewOwner(ctx contractapi.TransactionContextInterface, cid string, id string, crday int) error {
+	
+	var car Car
+	car.CID = cid
+	car.CRDay = crday
+	assetJSON, err := json.Marshal(car)
 	if err != nil {
 		return err
 	}
@@ -308,24 +354,22 @@ func (s *SmartContract) RepairRegister(ctx contractapi.TransactionContextInterfa
 }
 
 //보험 처리 등록
-func (s *SmartContract) InsuranceRegister(ctx contractapi.TransactionContextInterface, iname string, icompany string, iid string, aid string, iday int, iprice int) error {
+func (s *SmartContract) InsuranceRegister(ctx contractapi.TransactionContextInterface, iid string, aid string, iday int) error {
 	//보험 유무 확인
-	exists, err := s.ExistsCar(ctx, iname, icompany)
+	exists, err := s.ExistsCar(ctx, iid)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		return fmt.Errorf("the insurance %s does not exist", iname, icompany)
+		return fmt.Errorf("the insurance %s does not exist", iid)
 	}
 
 	//보험 처리
 	insurance := Insurance{
-		IName:					iname,
-		ICompany:				icompany,
 		IID:             		iid,
 		AID:					aid,
 		IDay:					iday,
-		IPrice:    				iprice,
+		IPrice:    				0,
 	}
 
 	assetJSON, err := json.Marshal(insurance)
@@ -336,8 +380,8 @@ func (s *SmartContract) InsuranceRegister(ctx contractapi.TransactionContextInte
 	return ctx.GetStub().PutState(iid, assetJSON)
 }
 
-//자동차 고장 부위 조회
-func (s *SmartContract) PartCar(ctx contractapi.TransactionContextInterface, rid string) (part string, error) {
+//자동차 수리 정보 조회
+func (s *SmartContract) GetCar(ctx contractapi.TransactionContextInterface, rid string) (*Repair, error) {
 	assetJSON, err := ctx.GetStub().GetState(rid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read from world state: %v", err)
@@ -352,55 +396,45 @@ func (s *SmartContract) PartCar(ctx contractapi.TransactionContextInterface, rid
 		return nil, err
 	}
 
-	return &repair.part, nil
-}
-
-//자동차 수리점 메모 조회
-func (s *SmartContract) GetCar(ctx contractapi.TransactionContextInterface, rid string) (message string, error) {
-	assetJSON, err := ctx.GetStub().GetState(rid)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read from world state: %v", err)
-	}
-	if assetJSON == nil {
-		return nil, fmt.Errorf("the repair %s does not exist", rid)
-	}
-
-	var repair Repair
-	err = json.Unmarshal(assetJSON, &repair)
-	if err != nil {
-		return nil, err
-	}
-
-	return &repair.message, nil
+	return &repair, nil
 }
 
 //보험료 업로드(보험사)
-func (s *SmartContract) InsuranceCar(ctx contractapi.TransactionContextInterface, iname string, icompany string, iid string, iprice int) error {
+func (s *SmartContract) InsuranceCar(ctx contractapi.TransactionContextInterface, iid string, iprice int) error {
 
-	exists, err := s.ExistsInsurance(ctx, iname, icompany)
+	insurance, err := s.OkCar(ctx, iid)
 	if err != nil {
 		return err
 	}
-	if exists {
-		return fmt.Errorf("the insurance %s already exists", iname, icompany)
-	}
 
-	insurance := Insurance{
-		IName:             	iname,
-		ICompany:			icompany,
-		IID:				iid,
-		IPrice:				iprice,
-	}
+	insurance.IPrice = iprice
 	assetJSON, err := json.Marshal(insurance)
 	if err != nil {
 		return err
 	}
 
 	return ctx.GetStub().PutState(iid, assetJSON)
+	// exists, err := s.ExistsInsurance(ctx, iid)
+	// if err != nil {
+	// 	return err
+	// }
+	// if exists {
+	// 	return fmt.Errorf("the insurance %s already exists", iid)
+	// }
+
+	// insurance := Insurance{
+	// 	IPrice:				iprice,
+	// }
+	// assetJSON, err := json.Marshal(insurance)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return ctx.GetStub().PutState(iid, assetJSON)
 }
 
 //자동차 수리 비용 확인(보험사)
-func (s *SmartContract) OkCar(ctx contractapi.TransactionContextInterface, iid string) (iprice int, error) {
+func (s *SmartContract) OkCar(ctx contractapi.TransactionContextInterface, iid string) (*Insurance, error) {
 	assetJSON, err := ctx.GetStub().GetState(iid)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read from world state: %v", err)
@@ -415,7 +449,24 @@ func (s *SmartContract) OkCar(ctx contractapi.TransactionContextInterface, iid s
 		return nil, err
 	}
 
-	return &insurance.iprice, nil
+	return &insurance, nil
+}
+
+//자동차 수리비 정정
+func (s *SmartContract) ResearchCar(ctx contractapi.TransactionContextInterface, rid string, price int) error {
+
+	repair, err := s.GetCar(ctx, rid)
+	if err != nil {
+		return err
+	}
+
+	repair.Price = price
+	assetJSON, err := json.Marshal(repair)
+	if err != nil {
+		return err
+	}
+
+	return ctx.GetStub().PutState(rid, assetJSON)
 }
 
 //수리 비용 완료 처리(딜러)
@@ -482,7 +533,6 @@ func (s *SmartContract) NumberCar(ctx contractapi.TransactionContextInterface, c
 	}
 
 	car := Car{
-		CID:            cid,
 		Board:          board,
 	}
 	assetJSON, err := json.Marshal(car)

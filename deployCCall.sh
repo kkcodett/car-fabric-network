@@ -20,8 +20,8 @@ export FABRIC_CFG_PATH=${PWD}/config
 # Chaincode config variable
 
 # CHANNEL_NAME="mychannelall"
-CC_NAME="basic"
-CC_SRC_PATH="./chaincode/asset-transfer-basic"
+CC_NAME="cfnall"
+CC_SRC_PATH="./chaincode/cfninterface"
 CC_RUNTIME_LANGUAGE="golang"
 CC_VERSION="1"
 CHANNEL_NAME="mychannelall"
@@ -224,6 +224,6 @@ sleep 3
 ## TEST2 : Query the chaincode
 infoln "TEST2 : Query the chaincode"
 set -x
-peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"Args":["GetAllAssets"]}' >&log.txt
+peer chaincode query -C $CHANNEL_NAME -n ${CC_NAME} -c '{"Args":["GetAllCar"]}' >&log.txt
 { set +x; } 2>/dev/null
 cat log.txt
