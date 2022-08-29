@@ -166,13 +166,13 @@ func (s *SmartContract) ExistsInsurance(ctx contractapi.TransactionContextInterf
 func (s *SmartContract) RegisterCar(ctx contractapi.TransactionContextInterface, cid string, company string, model string, cday int, fvalue int) error {
 
 	//차 존재하는지 알림
-	exists, err := s.ExistsCar(ctx, cid)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return fmt.Errorf("the car %s already exists", cid)
-	}
+	//exists, err := s.ExistsCar(ctx, cid)
+	//if err != nil {
+		//return err
+	//}
+	//if exists {
+		//return fmt.Errorf("the car %s already exists", cid)
+	//}
 
 	//여기부터 등록
 	car := Car{
@@ -232,14 +232,14 @@ func (s *SmartContract) AddCar(ctx contractapi.TransactionContextInterface, cid 
 
 //운전 면허 등록
 func (s *SmartContract) OwnerRegister(ctx contractapi.TransactionContextInterface, owner string, address string, id string, rday int) error {
-	exists, err := s.ExistsOwner(ctx, owner)
+	//exists, err := s.ExistsOwner(ctx, id)
 	//등록확인
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("the owner %s does not exist", owner)
-	}
+	//if err != nil {
+		//return err
+	//}
+	//if !exists {
+		//return fmt.Errorf("the owner %s does not exist", id)
+	//}
 
 	//면허 등록
 	register := Register{
@@ -253,7 +253,7 @@ func (s *SmartContract) OwnerRegister(ctx contractapi.TransactionContextInterfac
 		return err
 	}
 
-	return ctx.GetStub().PutState(owner, assetJSON)
+	return ctx.GetStub().PutState(id, assetJSON)
 }
 
 //새로운 차주 등록
@@ -329,13 +329,13 @@ func (s *SmartContract) OwnerRead(ctx contractapi.TransactionContextInterface, i
 
 //차 수리 등록
 func (s *SmartContract) RepairRegister(ctx contractapi.TransactionContextInterface, rid string, cid string, part string, price int, message string) error {
-	exists, err := s.ExistsCar(ctx, cid)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("this car %s does not exist", cid)
-	}
+	//exists, err := s.ExistsCar(ctx, cid)
+	//if err != nil {
+		//return err
+	//}
+	//if !exists {
+		//return fmt.Errorf("this car %s does not exist", cid)
+	//}
 
 	// overwriting original asset with new asset
 	repair := Repair{
@@ -356,13 +356,13 @@ func (s *SmartContract) RepairRegister(ctx contractapi.TransactionContextInterfa
 //보험 처리 등록
 func (s *SmartContract) InsuranceRegister(ctx contractapi.TransactionContextInterface, iid string, aid string, iday int) error {
 	//보험 유무 확인
-	exists, err := s.ExistsCar(ctx, iid)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("the insurance %s does not exist", iid)
-	}
+	//exists, err := s.ExistsCar(ctx, iid)
+	//if err != nil {
+		//return err
+	//}
+	//if !exists {
+		//return fmt.Errorf("the insurance %s does not exist", iid)
+	//}
 
 	//보험 처리
 	insurance := Insurance{
@@ -491,13 +491,13 @@ func (s *SmartContract) ReactCar(ctx contractapi.TransactionContextInterface, ri
 //수리 비용 완료 처리(딜러)
 func (s *SmartContract) PriceCar(ctx contractapi.TransactionContextInterface, rid string) error {
 
-	exists, err := s.ExistsRepair(ctx, rid)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("the car %s does not exist", rid)
-	}
+	//exists, err := s.ExistsRepair(ctx, rid)
+	//if err != nil {
+		//return err
+	//}
+	//if !exists {
+		//return fmt.Errorf("the car %s does not exist", rid)
+	//}
 
 	return ctx.GetStub().DelState(rid)
 }
@@ -518,13 +518,13 @@ func (s *SmartContract) RemoveCar(ctx contractapi.TransactionContextInterface, c
 //자동차 사고 정보 등록
 func (s *SmartContract) ReportCar(ctx contractapi.TransactionContextInterface, aid string, apart string, dod int, aday int) error {
 
-	exists, err := s.ExistsAccident(ctx, aid)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return fmt.Errorf("the accident %s already exists", aid)
-	}
+	//exists, err := s.ExistsAccident(ctx, aid)
+	//if err != nil {
+		//return err
+	//}
+	//if exists {
+		//return fmt.Errorf("the accident %s already exists", aid)
+	//}
 
 	accident := Accident{
 		AID:            aid,
@@ -543,13 +543,13 @@ func (s *SmartContract) ReportCar(ctx contractapi.TransactionContextInterface, a
 //자동차 번호판 등록
 func (s *SmartContract) NumberCar(ctx contractapi.TransactionContextInterface, cid string, board string) error {
 
-	exists, err := s.ExistsCar(ctx, cid)
-	if err != nil {
-		return err
-	}
-	if exists {
-		return fmt.Errorf("the car %s already exists", cid)
-	}
+	//exists, err := s.ExistsCar(ctx, cid)
+	//if err != nil {
+		//return err
+	//}
+	//if exists {
+		//return fmt.Errorf("the car %s already exists", cid)
+	//}
 
 	car := Car{
 		Board:          board,
