@@ -314,18 +314,18 @@ func (s *SmartContract) OwnerRead(ctx contractapi.TransactionContextInterface, i
 }
 
 //차주 갱신
-func (s *SmartContract) UpdateNewOwner(ctx contractapi.TransactionContextInterface, cid string, id string, crday int) error {
+// func (s *SmartContract) UpdateNewOwner(ctx contractapi.TransactionContextInterface, cid string, id string, crday int) error {
 	
-	var car Car
-	car.CID = cid
-	car.CRDay = crday
-	assetJSON, err := json.Marshal(car)
-	if err != nil {
-		return err
-	}
+// 	var car Car
+// 	car.CID = cid
+// 	car.CRDay = crday
+// 	assetJSON, err := json.Marshal(car)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return ctx.GetStub().PutState(id, assetJSON)
-}
+// 	return ctx.GetStub().PutState(id, assetJSON)
+// }
 
 //차 수리 등록
 func (s *SmartContract) RepairRegister(ctx contractapi.TransactionContextInterface, rid string, cid string, part string, price int, message string) error {
@@ -399,6 +399,25 @@ func (s *SmartContract) GetCar(ctx contractapi.TransactionContextInterface, rid 
 	return &repair, nil
 }
 
+//자동차 사고 정보 조회
+func (s *SmartContract) ReGetCar(ctx contractapi.TransactionContextInterface, aid string) (*Accident, error) {
+	assetJSON, err := ctx.GetStub().GetState(aid)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read from world state: %v", err)
+	}
+	if assetJSON == nil {
+		return nil, fmt.Errorf("the accident %s does not exist", aid)
+	}
+
+	var accident Accident
+	err = json.Unmarshal(assetJSON, &accident)
+	if err != nil {
+		return nil, err
+	}
+
+	return &accident, nil
+}
+
 //보험료 업로드(보험사)
 func (s *SmartContract) InsuranceCar(ctx contractapi.TransactionContextInterface, iid string, iprice int) error {
 
@@ -453,7 +472,7 @@ func (s *SmartContract) OkCar(ctx contractapi.TransactionContextInterface, iid s
 }
 
 //자동차 수리비 정정
-func (s *SmartContract) ResearchCar(ctx contractapi.TransactionContextInterface, rid string, price int) error {
+func (s *SmartContract) ReactCar(ctx contractapi.TransactionContextInterface, rid string, price int) error {
 
 	repair, err := s.GetCar(ctx, rid)
 	if err != nil {

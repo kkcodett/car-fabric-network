@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+
+        <title> Car-Fabric-Network Application-Web </title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+
+        <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    </head>
+
+    <body>
+
+        <div class="container">
+            <br>
+            <hr>
+            <h1>자동차 폐차 페이지</h1>
+            <p>CID를 입력하세요.</p>
+            <hr>
+
+                <label class="form-label">CID :</label>
+                <input class="form-control" type="text" id="cid">
+                <br>
+                <button class="btn btn-danger" id="btn-read">폐차처리</button>
+            
+        </div>
+
+        <div class="container" id="result"></div>
+    </body>
+
+    <script>
+        $(`#btn-read`).click(()=>{
+            const cid = $(`#cid`).val()
+            console.log(cid)
+
+            $.get("/removecar", {cid}, (data, status)=>{
+
+                const res = JSON.stringify(data.msg)
+                const obj = JSON.parse(res)
+
+                $(`#result`).empty()
+            })
+        })
+
+    </script>
+</html>

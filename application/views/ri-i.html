@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+
+        <title> Car-Fabric-Network Application-Web </title>
+
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+
+        <script src="https://code.jquery.com/jquery-3.1.0.min.js"></script>
+    </head>
+
+    <body>
+
+        <div class="container">
+            <br>
+            <hr>
+            <h1>보험 처리 등록 페이지</h1>
+            <p>IID, AID, 보험 처리 날짜 를 입력하세요.</p>
+            <hr>
+
+            <form method="post" action="/insuranceregister">
+                <label class="form-label">IID :</label>
+                <input class="form-control" type="text" name="iid">
+                <br>
+                <label class="form-label">AID :</label>
+                <input class="form-control" type="text" name="aid">
+                <br>
+                <label class="form-label">보험처리일 :</label>
+                <input class="form-control" type="text" name="iday">
+                <br>
+                <input type="submit" class="btn btn-primary" name="등록하기">
+            </form>
+
+            <div class="container" id="result"></div>
+        </div>
+        
+    </body>
+
+</html>

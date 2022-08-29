@@ -22,10 +22,11 @@
                 <label class="form-label">CID :</label>
                 <input class="form-control" type="text" id="cid">
                 <br>
-                <button class="btn btn-warning" id="btn-read">조회하기</button>
+                <button class="btn btn-success" id="btn-read">조회하기</button>
             
         </div>
 
+        <div class="container" id="result"></div>
     </body>
 
     <script>
@@ -33,7 +34,7 @@
             const cid = $(`#cid`).val()
             console.log(cid)
 
-            $.get("/info", cid, (data, status)=>{
+            $.get("/infocar", {cid}, (data, status)=>{
 
                 const res = JSON.stringify(data.msg)
                 const obj = JSON.parse(res)
