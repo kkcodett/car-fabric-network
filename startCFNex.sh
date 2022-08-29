@@ -14,20 +14,18 @@ pushd .
 
 ./startnetwork.sh
 
-sleep 5
+sleep 20
 
 ./createchannelall.sh
 
-sleep 5
+sleep 20
 
 ./setAnchorPeerUpdateall.sh
 
-sleep 5
+sleep 20
 
 ./deployCCall.sh
 
-sleep 5
-
-./application/ccp/ccp-generate.sh
+sleep 20
 
 popd
